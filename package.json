@@ -1,0 +1,23 @@
+{
+  "name": "github_actions_template",
+  "version": "1.0.0",
+  "description": "Repository to test setting up actions",
+  "scripts": {
+    "build": "ncc build src/index.ts -o lib",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "1.9.1",
+    "@actions/github": "5.0.3"
+  },
+  "devDependencies": {
+    "@types/jest": "28.1.6",
+    "@vercel/ncc": "0.34.0",
+    "jest": "28.1.3",
+    "prettier": "2.7.1",
+    "ts-jest": "28.0.7",
+    "typescript": "4.7.4"
+  }
+}

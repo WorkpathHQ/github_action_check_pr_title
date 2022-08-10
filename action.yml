@@ -1,0 +1,13 @@
+name: 'Message sender'
+description: 'Sends a message whenever an action happens in a PR'
+author: 'Guybrush Threepwood'
+inputs:
+  github_token:
+    description: 'Token for the repo. Can be passed in using {{ secrets.GITHUB_TOKEN }}'
+    required: true
+  message:
+    description: 'Message to send'
+    required: true
+runs:
+  using: 'node16'
+  main: 'lib/index.js'
