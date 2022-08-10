@@ -2,42 +2,60 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
-import { sum } from './util/sum';
+const validEvent = ['pull_request'];
 
 async function run() {
   try {
-    const githubToken = core.getInput('github_token', {
-      required: true,
-    });
+    const githubToken = core.getInput('github_token', { required: true });
     // Creates an Octokit instance, a helper to interact with
     // GitHub REST interface
     // https://octokit.github.io/rest.js
     const client = github.getOctokit(githubToken);
-    const message = core.getInput('message');
-
-    // There is no documentation of context content...
-    // So best to console log it to get the content lol. Scroll further down in this doc
-    // https://github.com/actions/toolkit/tree/main/packages/github
-    // console.log('context', context);
     const context = github.context;
     const owner = context.issue.owner;
     const repo = context.issue.repo;
     const pullRequestNumber = context.issue.number;
 
-    // Not necessary. Might be useful to safeguard when it's critical to ensure this
-    // action only runs on specific events.
-    // https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
-    if (github.context.eventName !== 'pull_request') {
-      core.setFailed('Can only run on pull requests!');
-      return;
+    // The pull request info on the context isn't up to date when
+    // user updates title and re-runs the workflow.
+    // Therefore fetch the pull request via REST API
+    // to ensure we use the current title.
+    const { data: pullRequest } = await client.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: pullRequestNumber,
+    });
+    const title = pullRequest.title;
+
+    core.info(`Pull Request title: "${title}"`);
+
+    // Check if title pass regex
+    let _regex;
+    const regex = core.getInput('regex');
+    const regexFlags = core.getInput('regex_flags');
+    if (regexFlags) {
+      _regex = new RegExp(regex, regexFlags);
+    } else {
+      _regex = new RegExp(regex);
     }
 
-    await client.rest.issues.createComment({
-      owner: owner,
-      repo: repo,
-      issue_number: pullRequestNumber,
-      body: `${message} - ${sum(2, 3)}`,
-    });
+    if (!_regex.test(title)) {
+      const failureMessage = `Pull Request title "${title}" failed to pass match regex - ${regex}`;
+
+      // if not set failure exit code with failureMessage
+      // https://docs.github.com/en/actions/creating-actions/setting-exit-codes-for-actions
+      core.setFailed(failureMessage);
+
+      // and also display comment
+      await client.rest.issues.createComment({
+        owner: owner,
+        repo: repo,
+        issue_number: pullRequestNumber,
+        body: failureMessage,
+      });
+
+      return;
+    }
   } catch (error) {
     if (error instanceof Error) {
       console.log(error);

@@ -1,13 +1,16 @@
-name: 'Message sender'
-description: 'Sends a message whenever an action happens in a PR'
-author: 'Guybrush Threepwood'
+name: 'Check PR Title'
+description: 'Check PR Title against Regex'
+author: 'Savio van Hoi'
 inputs:
   github_token:
     description: 'Token for the repo. Can be passed in using {{ secrets.GITHUB_TOKEN }}'
     required: true
-  message:
-    description: 'Message to send'
+  regex:
+    description: 'Regex to check title'
     required: true
+  regex_flags:
+    description: 'One of https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags'
+    required: false
 runs:
   using: 'node16'
   main: 'lib/index.js'
